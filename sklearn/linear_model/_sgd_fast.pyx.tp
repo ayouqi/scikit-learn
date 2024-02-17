@@ -302,6 +302,29 @@ cdef class SquaredLoss(Regression):
         return SquaredLoss, ()
 
 
+cdef class QuantileRegLoss(Regression):
+    """Quantile regression with the pinball loss function."""
+    cdef double quantile
+
+    def __init__(self, double quantile):
+        self.quantile = quantile
+
+    cdef double loss(self, double p, double y) noexcept nogil:
+        if p <= y:
+            return self.quantile * (y - p)
+        else:
+            return (1 - self.quantile) * (p - y)
+
+    cdef double dloss(self, double p, double y) noexcept nogil:
+        if p <= y:
+            return -1 * self.quantile
+        else:
+            return (1 - self.quantile)
+
+    def __reduce__(self):
+        return QuantileRegLoss, (self.quantile,)
+
+
 cdef class Huber(Regression):
     """Huber regression loss
 

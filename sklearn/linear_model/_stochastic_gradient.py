@@ -39,6 +39,7 @@ from ._sgd_fast import (
     SquaredEpsilonInsensitive,
     SquaredHinge,
     SquaredLoss,
+    QuantileRegLoss,
     _plain_sgd32,
     _plain_sgd64,
 )
@@ -91,6 +92,7 @@ class BaseSGD(SparseCoefMixin, BaseEstimator, metaclass=ABCMeta):
         "random_state": ["random_state"],
         "warm_start": ["boolean"],
         "average": [Interval(Integral, 0, None, closed="left"), bool, np.bool_],
+        "quantile": [Interval(Real, 0, None, closed="left")]
     }
 
     def __init__(
@@ -116,6 +118,7 @@ class BaseSGD(SparseCoefMixin, BaseEstimator, metaclass=ABCMeta):
         n_iter_no_change=5,
         warm_start=False,
         average=False,
+        quantile=0.5
     ):
         self.loss = loss
         self.penalty = penalty
@@ -135,6 +138,7 @@ class BaseSGD(SparseCoefMixin, BaseEstimator, metaclass=ABCMeta):
         self.n_iter_no_change = n_iter_no_change
         self.warm_start = warm_start
         self.average = average
+        self.quantile = quantile
         self.max_iter = max_iter
         self.tol = tol
 
@@ -168,6 +172,8 @@ class BaseSGD(SparseCoefMixin, BaseEstimator, metaclass=ABCMeta):
         loss_class, args = loss_[0], loss_[1:]
         if loss in ("huber", "epsilon_insensitive", "squared_epsilon_insensitive"):
             args = (self.epsilon,)
+        if loss == "quantiles":
+            args = (self.quantile,)
         return loss_class(*args)
 
     def _get_learning_rate_type(self, learning_rate):
@@ -513,6 +519,7 @@ class BaseSGDClassifier(LinearClassifierMixin, BaseSGD, metaclass=ABCMeta):
         "log_loss": (Log,),
         "modified_huber": (ModifiedHuber,),
         "squared_error": (SquaredLoss,),
+        "quantiles": (QuantileRegLoss,),
         "huber": (Huber, DEFAULT_EPSILON),
         "epsilon_insensitive": (EpsilonInsensitive, DEFAULT_EPSILON),
         "squared_epsilon_insensitive": (SquaredEpsilonInsensitive, DEFAULT_EPSILON),
@@ -1380,6 +1387,7 @@ class SGDClassifier(BaseSGDClassifier):
 class BaseSGDRegressor(RegressorMixin, BaseSGD):
     loss_functions = {
         "squared_error": (SquaredLoss,),
+        "quantiles": (QuantileRegLoss,),
         "huber": (Huber, DEFAULT_EPSILON),
         "epsilon_insensitive": (EpsilonInsensitive, DEFAULT_EPSILON),
         "squared_epsilon_insensitive": (SquaredEpsilonInsensitive, DEFAULT_EPSILON),
@@ -1416,6 +1424,7 @@ class BaseSGDRegressor(RegressorMixin, BaseSGD):
         n_iter_no_change=5,
         warm_start=False,
         average=False,
+        quantile=0.5
     ):
         super().__init__(
             loss=loss,
@@ -1437,6 +1446,7 @@ class BaseSGDRegressor(RegressorMixin, BaseSGD):
             n_iter_no_change=n_iter_no_change,
             warm_start=warm_start,
             average=average,
+            quantile=quantile
         )
 
     def _partial_fit(
@@ -2006,6 +2016,7 @@ class SGDRegressor(BaseSGDRegressor):
         n_iter_no_change=5,
         warm_start=False,
         average=False,
+        quantile=0.5
     ):
         super().__init__(
             loss=loss,
@@ -2027,6 +2038,7 @@ class SGDRegressor(BaseSGDRegressor):
             n_iter_no_change=n_iter_no_change,
             warm_start=warm_start,
             average=average,
+            quantile=quantile
         )
 
     def _more_tags(self):
