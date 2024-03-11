@@ -24,3 +24,8 @@ cdef class Log(Classification):
 cdef class SquaredLoss(Regression):
     cdef double loss(self, double y, double p) noexcept nogil
     cdef double dloss(self, double y, double p) noexcept nogil
+
+
+cdef class QuantileRegLoss(Regression):
+    cdef double loss(self, double y, double p) noexcept nogil
+    cdef double dloss(self, double y, double p) noexcept nogil
