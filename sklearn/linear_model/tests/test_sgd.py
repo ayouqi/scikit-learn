@@ -1941,6 +1941,18 @@ def test_loss_squared_loss():
     ]
     _test_loss_common(loss, cases)
 
+def test_loss_quantile_reg_loss():
+    # Test QuantileRegLoss
+    loss = sgd_fast.QuantileRegLoss(0.5)
+    cases = [
+        # (p, y, expected_loss, expected_dloss)
+        (0.0, 0.0, 0.0, -0.5),
+        (1.0, 1.0, 0.0, -0.5),
+        (1.0, 0.0, 0.5, 0.5),
+        (0.5, -1.0, 0.75, 0.5),
+        (-2.5, 2.0, 2.25, 0.5),
+    ]
+    _test_loss_common(loss, cases)
 
 def test_loss_huber():
     # Test Huber
